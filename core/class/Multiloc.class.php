@@ -34,7 +34,7 @@ class Multiloc extends eqLogic
         foreach (eqLogic::byType('Multiloc', true) as $eqLogic) {
             $eqLogic->updateInfo();
         }
-        $	eqLogic->refreshWidget();
+        $eqLogic->refreshWidget();
     }
 
 
