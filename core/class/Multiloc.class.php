@@ -34,7 +34,7 @@ class Multiloc extends eqLogic
         foreach (eqLogic::byType('Multiloc', true) as $eqLogic) {
             $eqLogic->updateInfo();
         }
-        $eqLogic->refreshWidget();
+        $	eqLogic->refreshWidget();
     }
 
 
@@ -76,6 +76,8 @@ public function postSave()
     $cmd = $this->getCmd(null, 'lieu');
     if (!is_object($cmd)) {
         $cmd = new MultilocCmd();
+        $cmd->setTemplate('dashboard', 'tile');
+        $cmd->setTemplate('mobile', 'tile');
     }
     $cmd->setName(__('lieu', __FILE__));
     $cmd->setEqLogic_id($this->id);
@@ -83,16 +85,15 @@ public function postSave()
     $cmd->setType('info');
     $cmd->setSubType('string');
     $cmd->setConfiguration('position', '');
-    $cmd->setConfiguration('Typeloc', '');
+    $cmd->setConfiguration('Typeloc', 'lieu');
     $cmd->setConfiguration('reverse', 1);
-    $cmd->setConfiguration('rue', '');
-    $cmd->setConfiguration('ville', '');
-    $cmd->setConfiguration('codepostale', '');
     $cmd->save();
 
     $cmd = $this->getCmd(null, 'personne');
     if (!is_object($cmd)) {
         $cmd = new MultilocCmd();
+        $cmd->setTemplate('dashboard', 'tile');
+        $cmd->setTemplate('mobile', 'tile');
     }
     $cmd->setName(__('personne', __FILE__));
     $cmd->setEqLogic_id($this->id);
@@ -100,11 +101,8 @@ public function postSave()
     $cmd->setType('info');
     $cmd->setSubType('string');
     $cmd->setConfiguration('position', '');
-    $cmd->setConfiguration('Typeloc', '');
+    $cmd->setConfiguration('Typeloc', 'personne');
     $cmd->setConfiguration('reverse', 1);
-    $cmd->setConfiguration('rue', '');
-    $cmd->setConfiguration('ville', '');
-    $cmd->setConfiguration('codepostale', '');
     $cmd->save();
 
     $this->updateInfo();
