@@ -85,7 +85,8 @@ class Multiloc extends eqLogic
 		$cmd->setType('info');
 		$cmd->setSubType('string');
       	$cmd->setConfiguration('position', '');
-      	$cmd->setConfiguration('typeloc', '');
+      $cmd->setConfiguration('Typeloc', '');
+     	$cmd->setConfiguration('reverse', 1);
 		$cmd->save();    
                    
       $this->updateInfo();
@@ -122,12 +123,47 @@ class Multiloc extends eqLogic
          $cmd_value = $cmd_virt->execCmd();
           $cmd->setConfiguration('position', $cmd_value);
           $cmd->save(); 
+         $this->updateGeocoding($cmd->getConfiguration('position'), $cmd);
         }
 }
 
   	}
+  
+  	public function updateGeocoding($geoloc, $cmd) {
+		log::add('Multiloc', 'debug', 'Coordonnées ' . $geoloc);
+		if ($geoloc == '' || strrpos($geoloc, ',') === false) {
+			log::add('Multiloc', 'error', 'Coordonnées invalides ' . $geoloc);
+			return true;
+		}
+      	$loc = explode(',',$geoloc);
+      	$lat = $loc[0];
+      	$lon = $loc[1];
+      if (config::byKey('email', 'Multiloc') == '') {
+        log::add('Multiloc', 'debug', 'Vous devez remplir votre email dans la page de configuration');
+			return;
+      }
+		if ($cmd->getConfiguration('reverse')) {
+			$url = 'https://nominatim.openstreetmap.org/reverse.php?format=jsonv2&addressdetails=1&lat='.$lat.'&lon='.$lon.'&&email='.$this->getConfiguration('email') ;
+			$request_http = new com_http($url);
+			$data = $request_http->exec(30);
+			if (!is_string($data) || !is_array(json_decode($data, true)) || (json_last_error() !== JSON_ERROR_NONE)) {
+				log::add('Multiloc', 'debug', 'Erreur  ' . $url);
+			}
+			$jsondata = json_decode($data, true);
+		} else {
 
-   
+		}
+      $this->updateData($jsondata, $cmd);
+	}
+
+   public function updateData($jsondata, $cmd) {
+     $cmd->setConfiguration('rue', $jsondata['address']['road']);
+     $cmd->setConfiguration('ville', $jsondata['address']['town']);
+     $cmd->setConfiguration('codepostale', $jsondata['address']['postcode']);
+    log::add('Multiloc', 'debug', 'adresse: ' . $jsondata['address']['road'] . " " . $jsondata['address']['town']. " ". $jsondata['address']['postcode']);
+
+     $cmd->save(); 
+   }
      //Non obligatoire mais permet de modifier l'affichage du widget si vous en avez besoin
       public function toHtml($_version = 'dashboard') {
                 $replace = $this->preToHtml($_version);
@@ -144,7 +180,6 @@ class Multiloc extends eqLogic
         foreach ($this->getCmd('info') as $cmd) {
         
           if ($cmd->getConfiguration("Typeloc") == "personne"){
-      
                log::add('Multiloc', 'debug', 'Typeloc: ' .$cmd->getConfiguration("Typeloc"));
         $replace['#'.$cmd->getConfiguration("Typeloc").'#'] = $replace['#'.$cmd->getConfiguration("Typeloc").'#'] . 'L.marker(['. $cmd->getConfiguration("position") .']).addTo(map'.$cmd->getEqLogic_id().').bindPopup("' .$cmd->getName() .'").openPopup();';
           }elseif ($cmd->getConfiguration("Typeloc") == "lieu"){
